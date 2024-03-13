@@ -1,5 +1,5 @@
 /*
-CSC3916 HW2
+CSC3916 HW3
 File: Server.js
 Description: Web API scaffolding for Movie API
  */
@@ -13,6 +13,7 @@ var jwt = require('jsonwebtoken');
 var cors = require('cors');
 var User = require('./Users');
 var Movie = require('./Movies');
+const { mongo } = require('mongoose');
 
 var app = express();
 app.use(cors());
@@ -85,6 +86,71 @@ router.post('/signin', function (req, res) {
         })
     })
 });
+
+/******************************************************** */
+/*  MOVIES                                                */
+/******************************************************** */
+router.route('/movies')
+    .get(authJwtController.isAuthenticated,(req, res) => {
+        // Implementation here
+        Movie.find(req.query, function(err,movie){
+            res.json(movie);
+        });
+
+    })
+    .post(authJwtController.isAuthenticated,(req, res) => {
+        // Save movie
+        if (!req.body.title) {
+            res.json({success: false, msg: 'Please include movie title to save movie.'})
+        } else {
+            var movie = new Movie();
+            movie.title = req.body.title;
+            movie.releaseDate = req.body.releaseDate;
+            movie.genre = req.body.genre;
+            movie.actors = req.body.actors;
+    
+            movie.save(function(err){
+                if (err) {
+                    return res.json(err);
+                }
+    
+                res.json({success: true, msg: 'Successfully created new movie.'})
+            });
+        }
+    })
+    .put((req,res) => {
+        //update specific movie based on query, fail without query
+        if(!req.query._id)
+        {
+            res.json({success: false, msg: "Please specify a movie to update."});
+        } else {
+            var movie = {
+                title : req.body.title,
+                releaseDate : req.body.releaseDate,
+                genre : req.body.genre,
+                actors : req.body.actors,
+            };
+            Movie.updateOne(req.query, movie, function(err){
+                if (err) {
+                    return res.json(err);
+                }
+    
+                res.json({success: true, msg: 'Successfully updated movie.'})
+            });
+        }
+    })
+    .delete((req,res) => {
+        //delete movie based on query, fail without query
+        
+    })
+    .all((req, res) => {
+        // Any other HTTP Method
+        // Returns a message stating that the HTTP method is unsupported.
+        res.status(405).send({ message: 'HTTP method not supported.' });
+    });
+
+/******************************************************** */
+
 
 app.use('/', router);
 app.listen(process.env.PORT || 8080);
