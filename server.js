@@ -118,7 +118,7 @@ router.route('/movies')
             });
         }
     })
-    .put((req,res) => {
+    .put(authJwtController.isAuthenticated,(req,res) => {
         //update specific movie based on query, fail without query
         if(!req.query._id)
         {
@@ -139,9 +139,20 @@ router.route('/movies')
             });
         }
     })
-    .delete((req,res) => {
+    .delete(authJwtController.isAuthenticated,(req,res) => {
         //delete movie based on query, fail without query
-        
+        if(!req.query._id)
+        {
+            res.json({success: false, msg: "Please specify a movie to delete."});
+        } else {
+            Movie.deleteOne(req.query, function(err){
+                if (err) {
+                    return res.json(err);
+                }
+    
+                res.json({success: true, msg: 'Successfully deleted movie.'})
+            });
+        }
     })
     .all((req, res) => {
         // Any other HTTP Method
