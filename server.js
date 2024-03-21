@@ -43,7 +43,11 @@ function getJSONObjectForMovieRequirement(req) {
 }
 
 router.post('/signup', function(req, res) {
+
+    console.log("Signup request recieved.");
+
     if (!req.body.username || !req.body.password) {
+        console.log("Missing either username or password.");
         res.json({success: false, msg: 'Please include both username and password to signup.'})
     } else {
         var user = new User();
@@ -53,24 +57,30 @@ router.post('/signup', function(req, res) {
 
         user.save(function(err){
             if (err) {
-                if (err.code == 11000)
+                if (err.code == 11000) {
+                    console.log("User with username already exists.");
                     return res.json({ success: false, message: 'A user with that username already exists.'});
-                else
+                } else {
+                    console.log("Failed to create user.");
                     return res.json(err);
+                }
             }
-
+            console.log("User created.");
             res.json({success: true, msg: 'Successfully created new user.'})
         });
     }
 });
 
 router.post('/signin', function (req, res) {
+
+    console.log("Signin request received.");
     var userNew = new User();
     userNew.username = req.body.username;
     userNew.password = req.body.password;
 
     User.findOne({ username: userNew.username }).select('name username password').exec(function(err, user) {
         if (err) {
+            console.log("Failed to sign user in.");
             res.send(err);
         }
 
@@ -78,9 +88,11 @@ router.post('/signin', function (req, res) {
             if (isMatch) {
                 var userToken = { id: user.id, username: user.username };
                 var token = jwt.sign(userToken, process.env.SECRET_KEY);
+                console.log("User logged in.");
                 res.json ({success: true, token: 'JWT ' + token});
             }
             else {
+                console.log("Username or password incorrect.");
                 res.status(401).send({success: false, msg: 'Authentication failed.'});
             }
         })
@@ -93,6 +105,7 @@ router.post('/signin', function (req, res) {
 router.route('/movies')
     .get(authJwtController.isAuthenticated,(req, res) => {
         // Implementation here
+        console.log("GET request received.");
         Movie.find(req.query, function(err,movie){
             res.json(movie);
         });
@@ -100,7 +113,9 @@ router.route('/movies')
     })
     .post(authJwtController.isAuthenticated,(req, res) => {
         // Save movie
+        console.log("POST request received.");
         if (!req.body.title) {
+            console.log("Process failed: Missing movie title")
             res.json({success: false, msg: 'Please include movie title to save movie.'})
         } else {
             var movie = new Movie();
@@ -111,17 +126,20 @@ router.route('/movies')
     
             movie.save(function(err){
                 if (err) {
+                    console.log("Failed to save movie");
                     return res.json(err);
                 }
-    
+                console.log("Saved movie.");
                 res.json({success: true, msg: 'Successfully created new movie.'})
             });
         }
     })
     .put(authJwtController.isAuthenticated,(req,res) => {
         //update specific movie based on query, fail without query
+        console.log("PUT request recieved.");
         if(!req.query._id)
         {
+            console.log("PUT failed: Missing movie specification.");
             res.json({success: false, msg: "Please specify a movie to update."});
         } else {
             var movie = {
@@ -132,24 +150,28 @@ router.route('/movies')
             };
             Movie.updateOne(req.query, movie, function(err){
                 if (err) {
+                    console.log("Failed to update movie.");
                     return res.json(err);
                 }
-    
+                console.log("Updated movie.");
                 res.json({success: true, msg: 'Successfully updated movie.'})
             });
         }
     })
     .delete(authJwtController.isAuthenticated,(req,res) => {
         //delete movie based on query, fail without query
+        console.log("DELETE request recieved.");
         if(!req.query._id)
         {
+            console.log("DELETE failed: Missing movie specification.");
             res.json({success: false, msg: "Please specify a movie to delete."});
         } else {
             Movie.deleteOne(req.query, function(err){
                 if (err) {
+                    console.log("Failed to delete movie.");
                     return res.json(err);
                 }
-    
+                console.log("Movie deleted.");
                 res.json({success: true, msg: 'Successfully deleted movie.'})
             });
         }
