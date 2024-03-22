@@ -1,11 +1,10 @@
 var mongoose = require('mongoose');
-const {MongoClient} = require('mongodb');
+//const {MongoClient} = require('mongodb');
 var Schema = mongoose.Schema;
 
-//mongoose.connect(process.env.DB);
-const client = new MongoClient(process.env.DB);
-
-client.connect();
+mongoose.connect(process.env.DB);
+//const client = new MongoClient(process.env.DB);
+//client.connect();
 
 
 // Movie schema
